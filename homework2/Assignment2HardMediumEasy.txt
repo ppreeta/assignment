@@ -1,0 +1,137 @@
+Sub StockData()
+
+'Declare the variables
+Dim i As Long
+Dim lastRow As Long
+Dim Ticker As String
+Dim TotalVolume As Variant
+Dim SummaryTable As Long
+Dim ws As Worksheet
+Dim yearOpen As Double
+Dim yearClose As Double
+Dim percentChange As Double
+
+'Loop for each workseet
+
+For Each ws In Worksheets
+         
+'Intialize the total volume and Summary Table
+
+    TotalVolume = 0
+    SummaryTable = 2
+    yearOpen = 0
+
+'Calculate the end row
+    lastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+    ws.Cells(1, 9).Value = "Ticker"
+    ws.Cells(1, 10).Value = "Yearly Change"
+    ws.Cells(1, 11).Value = "Percent Change"
+    ws.Cells(1, 12).Value = "Total Stock Volume"
+
+'Begin the loop for counting rows in each sheet
+
+    For i = 2 To lastRow
+
+'Initialise yearOpen value
+
+If yearOpen = 0 Then
+
+yearOpen = ws.Cells(i, 3).Value
+
+End If
+
+'Compare the ticker cells value
+
+If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+
+Ticker = ws.Cells(i, 1).Value
+
+yearClose = ws.Cells(i, 6).Value
+
+'Calculate Total Volume
+
+TotalVolume = TotalVolume + ws.Cells(i, 7).Value
+
+'Calculate Yearly Change
+
+yearlyChange = yearClose - yearOpen
+
+'Calculate Percent Change
+
+If (yearOpen = 0 And yearClose = 0) Then
+                    percentChange = 0
+                ElseIf (yearOpen = 0 And yearClose <> 0) Then
+                    percentChange = 1
+                Else
+                    percentChange = yearlyChange / yearOpen
+                    ws.Range("K" & SummaryTable).Value = percentChange
+                    ws.Range("K" & SummaryTable).NumberFormat = "0.00%"
+                End If
+
+'Assign all values in the cells
+
+    ws.Range("I" & SummaryTable).Value = Ticker
+
+    ws.Range("J" & SummaryTable).Value = yearlyChange
+
+    ws.Range("L" & SummaryTable).Value = TotalVolume
+
+'Increment the Summary Table value
+
+    SummaryTable = SummaryTable + 1
+
+' Reset the Total Volume and YearOpen values
+
+    TotalVolume = 0
+
+    yearOpen = 0
+
+
+Else
+
+'Keep adding total value until the next tikcer cell is identified
+
+    TotalVolume = TotalVolume + ws.Cells(i, 7).Value
+
+
+End If
+
+
+Next i
+
+' Determine the Last Row of Yearly Change per WS
+        yearChangeLastRow = ws.Cells(Rows.Count, Column + 11).End(xlUp).Row
+        
+' Set Greatest % Increase, % Decrease, and Total Volume
+        ws.Cells(2, Column + 13).Value = "Greatest % Increase"
+        ws.Cells(3, Column + 13).Value = "Greatest % Decrease"
+        ws.Cells(4, Column + 13).Value = "Greatest Total Volume"
+        ws.Cells(1, Column + 14).Value = "Ticker"
+        ws.Cells(1, Column + 15).Value = "Value"
+        
+' Look through each rows to find the greatest value and its associate ticker
+    For Z = 2 To yearChangeLastRow
+    
+    If ws.Cells(Z, Column + 11).Value = Application.WorksheetFunction.Max(ws.Range("K2:K" & yearChangeLastRow)) Then
+                ws.Cells(2, Column + 14).Value = ws.Cells(Z, Column + 9).Value
+                ws.Cells(2, Column + 15).Value = ws.Cells(Z, Column + 11).Value
+                ws.Cells(2, Column + 15).NumberFormat = "0.00%"
+    ElseIf ws.Cells(Z, Column + 11).Value = Application.WorksheetFunction.Min(ws.Range("K2:K" & yearChangeLastRow)) Then
+                ws.Cells(3, Column + 14).Value = ws.Cells(Z, Column + 9).Value
+                ws.Cells(3, Column + 15).Value = ws.Cells(Z, Column + 11).Value
+                ws.Cells(3, Column + 15).NumberFormat = "0.00%"
+    ElseIf ws.Cells(Z, Column + 12).Value = Application.WorksheetFunction.Max(ws.Range("L2:L" & yearChangeLastRow)) Then
+                ws.Cells(4, Column + 14).Value = ws.Cells(Z, Column + 9).Value
+                ws.Cells(4, Column + 15).Value = ws.Cells(Z, Column + 12).Value
+                
+    End If
+    
+    Next Z
+
+Next ws
+
+End Sub
+
+
+
